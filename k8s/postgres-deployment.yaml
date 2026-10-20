@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: platform
+spec:
+  replicas: 1                      # keep 1 copy of the pod running
+  selector:
+    matchLabels:
+      app: postgres                # "the pods I manage are the ones labeled app=postgres"
+  template:                        # the blueprint for each pod
+    metadata:
+      labels:
+        app: postgres              # every pod made from this blueprint gets this label
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16       # the container image, same as in Compose
+          ports:
+            - containerPort: 5432  # the port Postgres listens on
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:   # take this value from the ConfigMap
+                  name: app-config
+                  key: DB_NAME
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DB_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:      # take this value from the Secret
+                  name: app-secret
+                  key: DB_PASSWORD
+          volumeMounts:
+            - name: init
+              mountPath: /docker-entrypoint-initdb.d   # Postgres runs scripts in this folder on first start
+      volumes:
+        - name: init
+          configMap:
+            name: postgres-init    # fill that folder from our init.sql ConfigMap
