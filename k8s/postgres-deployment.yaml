@@ -40,4 +40,4 @@ spec:
       volumes:
         - name: init
           configMap:
-            name: postgres-init    # fill that folder from our init.sql ConfigMap
+            name: postgres-init    # fill that folder from the init.sql ConfigMap
